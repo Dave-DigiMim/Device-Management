@@ -39,16 +39,13 @@ class Controller():
     def start(self):
         PTLogger.info("Starting device manager...")
 
-        if (self._hub_manager.connect_to_hub() is False):
-            PTLogger.error("No pi-top hub detected. Exiting...")
-            return
-
-        # Start the hub manager
+        if (self._hub_manager.connect_to_hub()):
+            self._hub_manager.start()
+        else:
+            PTLogger.error("No pi-top hub detected")
 
         if (self._publish_server.start_listening() is False):
             return
-
-        self._hub_manager.start()
 
         # Wait until we have established what device we're running on
 

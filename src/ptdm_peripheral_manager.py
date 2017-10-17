@@ -87,10 +87,6 @@ class PeripheralManager():
             self._callback_client._on_reboot_required()
 
     def start(self):
-        if self._device_id == DeviceID.unknown:
-            PTLogger.error("Unable to start pi-top peripheral management - invalid device ID")
-            return False
-
         if not self.is_initialised():
             PTLogger.error("Unable to start pi-top peripheral management - run initialise() first!")
             return False

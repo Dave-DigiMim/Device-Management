@@ -103,7 +103,7 @@ class HubManager():
         if (self._hub_connected()):
             return self._active_hub_module.get_device_id()
         else:
-            PTLogger.warning("Attempted to call get_device_id when there was no active hub")
+            PTLogger.debug("Attempted to call get_device_id when there was no active hub")
             return DeviceID.unknown
 
     def get_brightness(self):
