@@ -1,8 +1,8 @@
 # pi-top Device Management
 
-Python-based systemd service for detecting, configuring and communicating with pi-top hardware/peripherals
+Python-based daemon for detecting, configuring and communicating with pi-top hardware/peripherals
 
-### Table of Contents    
+## Table of Contents    
 * [What is in this repository?](#repo-contents)
 * [Controlling the device manager](#control)
 * [Logging](#logging)
@@ -10,9 +10,9 @@ Python-based systemd service for detecting, configuring and communicating with p
     * [Links](#support-links)
     * [Troubleshooting](#support-troubleshooting)
 
-### <a name="repo-contents"></a> What is in this repository?
+## <a name="repo-contents"></a> What is in this repository?
 
-#### Summary
+### Summary
 This repository forms the basis of the `pt-device-manager` software package, available for install on both pi-topOS and Raspbian. On the latest versions of pi-topOS, this package is pre-installed. On other platforms such as Raspbian, it is not recommended to install this package directly. Instead, follow the install instructions for any of the repositories for devices that this repository targets. For example, to install support for a pi-topPULSE on a pi-topCEED:
 
 <pre style="background-color: #002b36; color: #FFFFFF;">
@@ -34,7 +34,7 @@ The responsibilities of the device manager include:
 * Monitoring user input in order to dim the screen backlight when the user has been inactive for a configurable period.
 * Shutting down the OS when required.
 
-##### Supported device drivers and repositories
+#### Supported device drivers and repositories
 
 * **pi-topHUB v1**
     * For the original pi-top and pi-topCEED
@@ -47,22 +47,21 @@ The responsibilities of the device manager include:
 * **pi-topSPEAKER**
     * https://github.com/pi-top/pi-topSPEAKER
 
-#### Files
+### Contents
 
+#### Directory: `src`
 ##### pt-device-manager
 This Python script is the brain of the pi-top device management on pi-topOS. See [How it works](#how-it-works) for more information.
 
+##### ptdm_*
+These Python modules are used by pt-device-manager.
+
+#### Directory: `tools`
 ##### pt-brightness, pt-battery
 These Python scripts are pt-device-manager messaging clients. They send messages to the device management service to adjust the screen settings or query the battery status on a pi-top device.
 
-##### ptdm-*
-These Python modules are used by pt-device-manager
-
-##### poweroff.c, poweroff-v2
-These programs (written in C and Python respectively) are used to send a message directly to the relevent pi-top hub to trigger shutdown of the hub. They do not go via the 
-
 ##### pt-i2s
-Found in `i2s` subdirectory. Used by pt-device-manager to switch I2S on/off, specifically when targeting pi-topSPEAKER/pi-topPULSE. To configure for I2S, a custom `asound.conf` file is used to enable mixing multiple audio sources. As well as this, some settings in `/boot/config.txt` are altered:
+Used by pt-device-manager to switch I2S on/off, specifically when targeting pi-topSPEAKER/pi-topPULSE. To configure for I2S, a custom `asound.conf` file is used to enable mixing multiple audio sources. As well as this, some settings in `/boot/config.txt` are altered:
 
 * `dtoverlay=hifiberry-dac` - enables I2S audio on subsequent boots
 * `#dtparam=audio=on` - disables default sound driver
@@ -70,10 +69,22 @@ Found in `i2s` subdirectory. Used by pt-device-manager to switch I2S on/off, spe
 
 Disabling I2S reverses these changes.
 
+#### Directory: `assets`
 ##### hifiberry-alsactl.restore
 Found in `i2s` subdirectory. This file exposes a soundcard device configuration to the operating system, enabling volume control. It is used by `pt-device-manager` when it detects that I2S has been enabled via the daemon for the first time, whereby it reboots to enable. This operation is only required once, so a 'breadcrumb' file is created to indicate that this has been completed.
 
-### <a name="control"></a> Controlling the device manager
+#### Directory: `poweroff`
+##### poweroff-v1(.c), poweroff-v2
+These programs (written in C and Python respectively) are used to send a message directly to the relevant pi-top hub to trigger a full system hardware shutdown.
+
+#### Directory: `tests`
+##### pt-device-manager-req-test
+This Python script tests that the device manager is able to respond to requests for information such as the getting current device and brightness level as well as pinging, setting brightness and blanking/unblanking the screen.
+
+##### pt-device-manager-resp-test
+This Python script tests that the device manager is able to emit all of its publishing events, that reflect a system state change, such as battery level, brightness, lid opened/closed and peripheral connection state.
+
+## <a name="control"></a> Controlling the device manager
 
 pt-device-manager is intended to be a systemd service which starts with the OS and stops on shutdown. However for diagnostic or debugging purposes it can be useful to start and stop it, or to run it standalone.
 
@@ -112,7 +123,7 @@ sudo ./pt-device-manager --no-journal --log-level 20
 * `--log-level X` sets the logging levels where 10 is the lowest (debug) and 40 is the highest (serious errors only)
 
 
-### <a name="logging"></a> Logging
+## <a name="logging"></a> Logging
 
 As the pt-device-manager runs as a systemd service, it logs to the system journal. This can be viewed using commands such as:
 
@@ -122,16 +133,16 @@ sudo journalctl -u pt-device-manager --no-pager
 sudo journalctl -u pt-device-manager -b
 </pre>
 
-### <a name="support"></a> Support
-#### <a name="support-links"></a> Links
+## <a name="support"></a> Support
+### <a name="support-links"></a> Links
 * [pi-topHUB v1](https://github.com/pi-top/pi-topHUB-v1)
 * [pi-topHUB v2](https://github.com/pi-top/pi-topHUB-v2)
 * [pi-topPULSE](https://github.com/pi-top/pi-topPULSE)
 * [pi-topSPEAKER](https://github.com/pi-top/pi-topSPEAKER)
-* <a name="support-pinout"></a> [pi-top Peripherals' GPIO Pinouts](https://pinout.xyz/boards#manufacturer=pi-top)
+* <a name="support-pinout"></a>[pi-top Peripherals' GPIO Pinouts](https://pinout.xyz/boards#manufacturer=pi-top)
 * [Support](https://support.pi-top.com/)
 
-#### <a name="support-troubleshooting"></a> Troubleshooting
-##### Why is my pi-top addon not working?
+### <a name="support-troubleshooting"></a> Troubleshooting
+#### Why is my pi-top addon not working?
 
 * Please see the corresponding repository for your device. Repositories are listed at the top of this README.

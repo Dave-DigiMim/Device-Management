@@ -1,12 +1,13 @@
 /*
- * poweroff.c
+ * poweroff-v1.c
  *
- * turn the power of the pi-top hub off
+ * turn the power of the pi-top hub v1 off
  *
  * IMPORTANT WARNING: to not execute except at the end of the shutdown process
  * otherwise your sd card might get corrupted
  * 
  * Copyright 2016  rricharz
+ * Modified by pi-top (CEED Ltd)
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
