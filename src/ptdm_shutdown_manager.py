@@ -47,13 +47,13 @@ class ShutdownManager:
             ret_code1 = call(["systemctl", "enable", "pt-poweroff-v1.service"])
             PTLogger.info("systemctl enable pt-poweroff-v1.service " + str(ret_code1))
             ret_code2 = call(["systemctl", "disable", "pt-poweroff-v2.service"])
-            PTLogger.info("systemctl disable pt-poweroff-v1.service" + str(ret_code2))
+            PTLogger.info("systemctl disable pt-poweroff-v2.service " + str(ret_code2))
         elif self._device_id == DeviceID.pi_top_v2:
             PTLogger.info("Second generation pi-top")
             ret_code1 = call(["systemctl", "disable", "pt-poweroff-v1.service"])
             PTLogger.info("systemctl disable pt-poweroff-v1.service " + str(ret_code1))
             ret_code2 = call(["systemctl", "enable", "pt-poweroff-v2.service"])
-            PTLogger.info("systemctl enable pt-poweroff-v1.service" + str(ret_code2))
+            PTLogger.info("systemctl enable pt-poweroff-v2.service " + str(ret_code2))
         else:
             if self._device_id == DeviceID.pi_top_ceed:
                 PTLogger.info("pi-topCEED detected - no battery; disabling poweroff")
@@ -63,7 +63,7 @@ class ShutdownManager:
             ret_code1 = call(["systemctl", "disable", "pt-poweroff-v1.service"])
             PTLogger.info("systemctl disable pt-poweroff-v1.service " + str(ret_code1))
             ret_code2 = call(["systemctl", "disable", "pt-poweroff-v2.service"])
-            PTLogger.info("systemctl disable pt-poweroff-v1.service" + str(ret_code2))
+            PTLogger.info("systemctl disable pt-poweroff-v2.service " + str(ret_code2))
 
     def get_battery_capacity(self):
         return self._battery_capacity
