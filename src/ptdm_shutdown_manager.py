@@ -2,6 +2,7 @@ from ptcommon.logger import PTLogger
 from ptcommon.common_ids import DeviceID
 from ptcommon.counter import Counter
 from os import system
+from subprocess import call
 
 # Handles safe shutdown when the hub is communicating that its battery capacity is below a threshold set by ptdm_controller
 
@@ -38,6 +39,31 @@ class ShutdownManager:
 
     def set_device_id(self, new_value):
         self._device_id = new_value
+
+    def configure_shutdown_from_device_id(self):
+        PTLogger.info("Configuring shutdown based on device ID: " + str(self._device_id))
+        if self._device_id == DeviceID.pi_top:
+            PTLogger.info("First generation pi-top")
+            ret_code1 = call(["systemctl", "enable", "pt-poweroff-v1.service"])
+            PTLogger.info("systemctl enable pt-poweroff-v1.service " + str(ret_code1))
+            ret_code2 = call(["systemctl", "disable", "pt-poweroff-v2.service"])
+            PTLogger.info("systemctl disable pt-poweroff-v1.service" + str(ret_code2))
+        elif self._device_id == DeviceID.pi_top_v2:
+            PTLogger.info("Second generation pi-top")
+            ret_code1 = call(["systemctl", "disable", "pt-poweroff-v1.service"])
+            PTLogger.info("systemctl disable pt-poweroff-v1.service " + str(ret_code1))
+            ret_code2 = call(["systemctl", "enable", "pt-poweroff-v2.service"])
+            PTLogger.info("systemctl enable pt-poweroff-v1.service" + str(ret_code2))
+        else:
+            if self._device_id == DeviceID.pi_top_ceed:
+                PTLogger.info("pi-topCEED detected - no battery; disabling poweroff")
+            else:
+                PTLogger.info("No pi-top hardware detected - disabling poweroff")
+
+            ret_code1 = call(["systemctl", "disable", "pt-poweroff-v1.service"])
+            PTLogger.info("systemctl disable pt-poweroff-v1.service " + str(ret_code1))
+            ret_code2 = call(["systemctl", "disable", "pt-poweroff-v2.service"])
+            PTLogger.info("systemctl disable pt-poweroff-v1.service" + str(ret_code2))
 
     def get_battery_capacity(self):
         return self._battery_capacity

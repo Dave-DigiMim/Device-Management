@@ -45,10 +45,10 @@ class Controller():
             PTLogger.error("No pi-top hub detected")
 
         if (self._publish_server.start_listening() is False):
+            PTLogger.error("Able to start listening on publish server")
             return
 
         # Wait until we have established what device we're running on
-
         self._hub_manager.wait_for_device_identification()
         device_id = self._hub_manager.get_device_id()
 
@@ -56,15 +56,21 @@ class Controller():
 
         self._peripheral_manager.initialise_device_id(device_id)
         self._shutdown_manager.set_device_id(device_id)
+        self._shutdown_manager.configure_shutdown_from_device_id()
+
+        PTLogger.info("Device ID set to " + str(device_id))
 
         if (self._peripheral_manager.start() is False):
+            PTLogger.error("Able to start peripheral manager")
             return
 
         self._idle_monitor.start()
 
         if (self._request_server.start_listening() is False):
+            PTLogger.error("Able to start listening on request server")
             return
 
+        PTLogger.info("Fully configured - running")
         while (self._continue_running is True):
             sleep(0.5)
 
