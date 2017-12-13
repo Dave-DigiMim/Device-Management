@@ -19,7 +19,7 @@ def main():
         cleanup()
 
     except Exception as e:
-        debug_print("Error getting battery info: " + str(e))
+        print("Error getting battery info: " + str(e))
 
     finally:
         cleanup()
