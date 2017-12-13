@@ -56,8 +56,6 @@ class Controller():
 
         self._peripheral_manager.initialise_device_id(device_id)
         self._shutdown_manager.set_device_id(device_id)
-        self._shutdown_manager.configure_shutdown_from_device_id()
-
         PTLogger.info("Device ID set to " + str(device_id))
 
         if (self._peripheral_manager.start() is False):
@@ -69,6 +67,9 @@ class Controller():
         if (self._request_server.start_listening() is False):
             PTLogger.error("Able to start listening on request server")
             return
+
+        sleep(0.5)
+        self._shutdown_manager.configure_shutdown_from_device_id()
 
         PTLogger.info("Fully configured - running")
         while (self._continue_running is True):
