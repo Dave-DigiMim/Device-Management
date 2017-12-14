@@ -23,8 +23,8 @@ class ShutdownManager:
 
     def __init__(self):
         self._callback = None
-        self._battery_capacity = None
-        self._battery_charging = None
+        self._battery_capacity = -1
+        self._battery_charging = -1
 
         self._device_id = DeviceID.unknown
 
@@ -76,8 +76,8 @@ class ShutdownManager:
                 self._device_id == DeviceID.pi_top_v2)
 
     def battery_state_fully_defined(self):
-        capacity_defined = (self._battery_capacity is not None)
-        charging_defined = (self._battery_charging is not None)
+        capacity_defined = (self._battery_capacity > -1)
+        charging_defined = (self._battery_charging > -1)
 
         return (capacity_defined and charging_defined)
 
@@ -117,13 +117,9 @@ class ShutdownManager:
 
         if self.device_has_battery():
             if self.battery_state_fully_defined():
+                discharging = (self._battery_charging == 0)
 
-                # If the battery has not been removed altogther and the battery is not being charged, then evaluate
-                # whether we want to show warning messages or shutdown
-
-                battery_removed = (self._battery_capacity == 0)
-
-                if (battery_removed is False and self._battery_charging == 0):
+                if discharging:
                     self.update_counters_from_battery_state()
                     reset_ctrs = False
 
