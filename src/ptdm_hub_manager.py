@@ -1,5 +1,6 @@
 from ptcommon.common_ids import DeviceID
 from ptcommon.logger import PTLogger
+from ptcommon.sys_config import I2C
 from importlib import import_module
 import traceback
 from os import makedirs
@@ -16,6 +17,9 @@ class HubManager():
 
         self._callback_client = callback_client
         self._active_hub_module = None
+
+        if I2C.get_state() is False:
+            I2C.set_state(True)
 
     def connect_to_hub(self):
 
