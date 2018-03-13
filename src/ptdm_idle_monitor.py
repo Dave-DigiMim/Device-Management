@@ -65,11 +65,15 @@ class IdleMonitor():
 
     def _get_timeout_from_file(self):
         if path.exists(self.CONFIG_FILE):
-            file = open(self.CONFIG_FILE, 'r+')
-            self._idle_timeout_s = int(file.read().strip())
-            file.close()
+            try:
+                file = open(self.CONFIG_FILE, 'r+')
+                fileContents = file.read().strip()
+                file.close()
 
-        PTLogger.info("Idletime retrieved from config: " + str(self._idle_timeout_s))
+                self._idle_timeout_s = int(fileContents)
+                PTLogger.info("Idletime retrieved from config: " + str(self._idle_timeout_s))
+            except:
+                PTLogger.warning("Idletime could not be retrieved from config. Using default: " + str(self._idle_timeout_s))
 
     def _set_timeout_in_file(self):
         if path.exists(self.CONFIG_FILE):
