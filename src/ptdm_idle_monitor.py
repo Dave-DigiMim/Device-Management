@@ -22,7 +22,7 @@ class IdleMonitor():
         self._callback_client = callback_client
         self._main_thread = None
         self._run_main_thread = False
-        self._idle_timeout_s = 300
+        self._idle_timeout_s = 600
         self._cycle_sleep_time = self.DEFAULT_CYCLE_SLEEP_TIME
 
         if not path.exists(self.CONFIG_FILE_DIR):
