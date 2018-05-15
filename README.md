@@ -49,9 +49,17 @@ The responsibilities of the device manager include:
 
 ### Contents
 
-#### Directory: `src`
+#### Directory: `pt-device-manager`
 ##### pt-device-manager
 This Python script is the brain of the pi-top device management on pi-topOS. See [How it works](#how-it-works) for more information.
+
+##### ptdm_*
+These Python modules are used by pt-device-manager.
+
+
+#### Directory: `library/ptcommon`
+##### All files
+These files are shared by multiple components in pi-top device management. `python3-pt-common` installs these files to `/usr/lib/python3/dist-packages/`, where they can be imported and used by the components that require them.
 
 ##### ptdm_*
 These Python modules are used by pt-device-manager.
