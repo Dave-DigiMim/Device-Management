@@ -8,4 +8,4 @@ ExecStart=/usr/lib/pt-device-manager/pt-device-manager
 Environment="DISPLAY=:0.0"
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=local-fs.target

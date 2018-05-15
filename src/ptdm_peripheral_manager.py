@@ -1,6 +1,8 @@
 from ptcommon.common_functions import reboot_system
 from ptcommon.common_functions import touch_file
 from ptcommon.common_ids import DeviceID
+from ptcommon.common_ids import Peripheral
+from ptcommon.common_ids import PeripheralID
 from ptcommon.logger import PTLogger
 from ptcommon.sys_config import I2C
 from ptcommon.sys_config import I2S
@@ -19,7 +21,7 @@ from threading import Thread
 from time import sleep
 
 # Discovers which peripheral libraries are installed, and uses those to
-# detect, initialise, and communicate with the corresponding device
+# detect, initialise, and communicate with the corresponding peripheral
 
 
 class PeripheralManager():
@@ -36,22 +38,14 @@ class PeripheralManager():
         self._run_main_thread = False
         self._main_thread = Thread(target=self._main_thread_loop)
 
-        self._enabled_devices = []
-        self._known_devices = []
+        self._enabled_peripherals = []
         self._custom_imported_modules = {}
-        self._device_id = DeviceID.unknown
+        self._host_device_id = DeviceID.unknown
 
         PTLogger.debug("Initialising peripheral manager...")
         # Dynamically add the required python modules, if they are installed
         self.add_module_if_available('ptspeaker')
         self.add_module_if_available('ptpulse')
-
-        # Initialise the devices that we support
-        self.initialise_known_device({'id': 0, 'compatible_ids': [None], 'name': 'pi-topPULSE', 'type': 'HAT', 'addr': 0x24})
-        self.initialise_known_device({'id': 1, 'compatible_ids': [2, 3], 'name': 'pi-topSPEAKER-v1-Left', 'type': 'addon', 'addr': 0x71})
-        self.initialise_known_device({'id': 2, 'compatible_ids': [1, 3], 'name': 'pi-topSPEAKER-v1-Mono', 'type': 'addon', 'addr': 0x73})
-        self.initialise_known_device({'id': 3, 'compatible_ids': [1, 2], 'name': 'pi-topSPEAKER-v1-Right', 'type': 'addon', 'addr': 0x72})
-        self.initialise_known_device({'id': 4, 'compatible_ids': [None], 'name': 'pi-topSPEAKER-v2', 'type': 'addon', 'addr': 0x43})
 
         self.configure_hifiberry_alsactl()
 
@@ -60,7 +54,7 @@ class PeripheralManager():
             HeadphoneJack.set_as_audio_output()
 
     def initialise_device_id(self, device_id):
-        self._device_id = device_id
+        self._host_device_id = device_id
 
     def emit_enable_hdmi_to_i2s_audio(self):
         if (self._callback_client is not None):
@@ -70,13 +64,13 @@ class PeripheralManager():
         if (self._callback_client is not None):
             self._callback_client._on_disable_hdmi_to_i2s_audio()
 
-    def emit_peripheral_connected(self, device_id):
+    def emit_peripheral_connected(self, peripheral_id):
         if (self._callback_client is not None):
-            self._callback_client._on_peripheral_connected(device_id)
+            self._callback_client._on_peripheral_connected(peripheral_id)
 
-    def emit_peripheral_disconnected(self, device_id):
+    def emit_peripheral_disconnected(self, peripheral_id):
         if (self._callback_client is not None):
-            self._callback_client._on_peripheral_disconnected(device_id)
+            self._callback_client._on_peripheral_disconnected(peripheral_id)
 
     def emit_unsupported_hardware_message(self):
         if (self._callback_client is not None):
@@ -118,96 +112,70 @@ class PeripheralManager():
         except ImportError as exc:
             PTLogger.warning("Error: failed to import " + cfg_module_str + " settings module (" + str(exc) + ")")
 
-    def add_known_device(self, device):
-        self._known_devices.append(device)
+    def add_enabled_peripheral(self, peripheral):
+        PTLogger.info("Adding enabled peripheral: " + peripheral.name)
 
-    def add_enabled_device(self, device):
-        PTLogger.info("Adding enabled device: " + device['name'])
+        self._enabled_peripherals.append(peripheral)
+        self.emit_peripheral_connected(peripheral.id)
 
-        self._enabled_devices.append(device)
-        self.emit_peripheral_connected(device['id'])
+    def remove_enabled_peripheral(self, peripheral):
+        PTLogger.debug("Removing peripheral from enabled peripherals: " + peripheral.name)
 
-    def remove_enabled_device(self, device):
-        PTLogger.debug("Removing device from enabled devices: " + device['name'])
+        self._enabled_peripherals.remove(peripheral)
+        self.emit_peripheral_disconnected(peripheral.id)
 
-        self._enabled_devices.remove(device)
-        self.emit_peripheral_disconnected(device['id'])
-
-    def initialise_known_device(self, device):
-        self.add_known_device(device)
-
-    def get_device_by_id(self, device_id):
-        for device in self._known_devices:
-            if device['id'] == device_id:
-                return device
-
-        return None
-
-    def get_device_by_address(self, addr):
-        for device in self._known_devices:
-            if device['addr'] == int(addr, 16):
-                return device
-
-        return None
-
-    def get_device_by_name(self, name):
-        for device in self._known_devices:
-            if device['name'] == name:
-                return device
-        return None
-
-    def enable_v1_hub_v1_speaker(self, device):
+    def enable_v1_hub_v1_speaker(self, peripheral):
         ptspeaker_cfg = self._custom_imported_modules['ptspeaker']
-        ptspeaker_cfg.initialise(self._device_id, device['name'])
+        ptspeaker_cfg.initialise(self._host_device_id, peripheral.name)
 
         enabled, reboot_required, v2_hub_hdmi_to_i2s_required = ptspeaker_cfg.enable_device()
 
         if enabled or reboot_required:
             # Mark as enabled even if a reboot is required
             # to prevent subsequent attempts to enable
-            self.add_enabled_device(device)
+            self.add_enabled_peripheral(peripheral)
 
         if reboot_required:
             self.emit_reboot_message()
 
-    def enable_v1_hub_v2_speaker(self, device):
+    def enable_v1_hub_v2_speaker(self, peripheral):
         ptspeaker_cfg = self._custom_imported_modules['ptspeaker']
-        ptspeaker_cfg.initialise(self._device_id, device['name'])
+        ptspeaker_cfg.initialise(self._host_device_id, peripheral.name)
 
         enabled, reboot_required, v2_hub_hdmi_to_i2s_required = ptspeaker_cfg.enable_device()
 
         if enabled or reboot_required:
             # Mark as enabled even if a reboot is required
             # to prevent subsequent attempts to enable
-            self.add_enabled_device(device)
+            self.add_enabled_peripheral(peripheral)
 
         if reboot_required:
             self.emit_reboot_message()
 
-    def configure_v1_hub_pulse(self, device, enable):
+    def configure_v1_hub_pulse(self, peripheral, enable):
         ptpulse_cfg = self._custom_imported_modules['ptpulse']
-        ptpulse_cfg.initialise(self._device_id, device['name'])
+        ptpulse_cfg.initialise(self._host_device_id, peripheral.name)
 
         enabled, reboot_required, v2_hub_hdmi_to_i2s_required = ptpulse_cfg.enable_device()
 
         if enabled or reboot_required:
             # Mark as enabled even if a reboot is required
             # to prevent subsequent attempts to enable
-            self.add_enabled_device(device)
+            self.add_enabled_peripheral(peripheral)
 
         if (reboot_required is True):
             self.emit_reboot_message()
 
-    def enable_v2_hub_v2_speaker(self, device):
+    def enable_v2_hub_v2_speaker(self, peripheral):
         ptspeaker_cfg = self._custom_imported_modules['ptspeaker']
-        ptspeaker_cfg.initialise(self._device_id, device['name'])
+        ptspeaker_cfg.initialise(self._host_device_id, peripheral.name)
 
         enabled, reboot_required, v2_hub_hdmi_to_i2s_required = ptspeaker_cfg.enable_device()
 
         if (enabled is True or reboot_required is True):
             # Mark as enabled even if a reboot is required
             # to prevent subsequent attempts to enable
-            self.add_enabled_device(device)
+            self.add_enabled_peripheral(peripheral)
 
         if (enabled is True):
             if (v2_hub_hdmi_to_i2s_required is True):
@@ -218,16 +186,16 @@ class PeripheralManager():
         if (reboot_required is True):
             self.emit_reboot_message()
 
-    def configure_v2_hub_pulse(self, device, enable):
+    def configure_v2_hub_pulse(self, peripheral, enable):
         ptpulse_cfg = self._custom_imported_modules['ptpulse']
-        ptpulse_cfg.initialise(self._device_id, device['name'])
+        ptpulse_cfg.initialise(self._host_device_id, peripheral.name)
 
         enabled, reboot_required, v2_hub_hdmi_to_i2s_required = ptpulse_cfg.enable_device()
 
         if (enabled is True or reboot_required is True):
             # Mark as enabled even if a reboot is required
             # to prevent subsequent attempts to enable
-            self.add_enabled_device(device)
+            self.add_enabled_peripheral(peripheral)
 
         if (enabled is True):
             if (v2_hub_hdmi_to_i2s_required is True):
@@ -244,132 +212,136 @@ class PeripheralManager():
     def show_pulse_install_package_message(self):
         PTLogger.info("pi-topPULSE initialisation not available - please install 'python3-pt-pulse' package via apt-get")
 
-    def update_device_state(self, device, enable):
+    def update_peripheral_state(self, peripheral, enable):
         if enable:
-            PTLogger.info("Enabling device: " + device['name'])
+            PTLogger.info("Enabling peripheral: " + peripheral.name)
 
         else:
-            PTLogger.info("Disabling device: " + device['name'])
+            PTLogger.info("Disabling peripheral: " + peripheral.name)
 
-        device_enabled = (device in self._enabled_devices)
-        valid = (enable != device_enabled)
+        peripheral_enabled = self.get_peripheral_enabled(peripheral)
+        valid = (enable != peripheral_enabled)
 
         if valid:
-            if 'pi-topPULSE' in device['name']:
+            if 'pi-topPULSE' in peripheral.name:
                 if 'ptpulse' in self._custom_imported_modules:
-                    is_v1_hub = (self._device_id == DeviceID.pi_top) or (self._device_id == DeviceID.pi_top_ceed)
+                    is_v1_hub = (self._host_device_id == DeviceID.pi_top) or (self._host_device_id == DeviceID.pi_top_ceed)
 
-                    if self._device_id == DeviceID.pi_top_v2:
-                        self.configure_v2_hub_pulse(device, enable)
-                    elif is_v1_hub or self._device_id == DeviceID.unknown:
-                        self.configure_v1_hub_pulse(device, enable)
+                    if self._host_device_id == DeviceID.pi_top_v2:
+                        self.configure_v2_hub_pulse(peripheral, enable)
+                    elif is_v1_hub or self._host_device_id == DeviceID.unknown:
+                        self.configure_v1_hub_pulse(peripheral, enable)
                     else:
-                        print("NOT A VALID CONFIGURATION")
+                        PTLogger.error("Not a valid configuration")
                 else:
                     self.show_pulse_install_package_message()
-            elif 'pi-topSPEAKER' in device['name']:
+            elif 'pi-topSPEAKER' in peripheral.name:
                 if 'ptspeaker' in self._custom_imported_modules:
-                    is_v1_hub = (self._device_id == DeviceID.pi_top) or (self._device_id == DeviceID.pi_top_ceed)
+                    is_v1_hub = (self._host_device_id == DeviceID.pi_top) or (self._host_device_id == DeviceID.pi_top_ceed)
 
-                    if self._device_id == DeviceID.pi_top_v2:
+                    if self._host_device_id == DeviceID.pi_top_v2:
                         # CHECK THAT SPEAKER IS V2
-                        if device['name'] == 'pi-topSPEAKER-v2':
-                            self.enable_v2_hub_v2_speaker(device)
+                        if peripheral.name == 'pi-topSPEAKER-v2':
+                            self.enable_v2_hub_v2_speaker(peripheral)
                         else:
-                            print("Unable to initialise V1 speaker with V2 hardware")
+                            PTLogger.warning("Unable to initialise V1 speaker with V2 hardware")
                             # Mark as enabled even if a reboot is required
                             # to prevent subsequent attempts to enable
-                            self.add_enabled_device(device)
+                            self.add_enabled_peripheral(peripheral)
                             self.emit_unsupported_hardware_message()
-                    elif is_v1_hub or self._device_id == DeviceID.unknown:
+                    elif is_v1_hub or self._host_device_id == DeviceID.unknown:
                         if enable is True:
-                            if device['name'] == 'pi-topSPEAKER-v2':
-                                self.enable_v1_hub_v2_speaker(device)
+                            if peripheral.name == 'pi-topSPEAKER-v2':
+                                self.enable_v1_hub_v2_speaker(peripheral)
                             else:
-                                self.enable_v1_hub_v1_speaker(device)
+                                self.enable_v1_hub_v1_speaker(peripheral)
                         else:
-                            self.remove_enabled_device(device)
+                            self.remove_enabled_peripheral(peripheral)
                     else:
-                        print("NOT A VALID CONFIGURATION")
+                        PTLogger.error("Not a valid configuration")
                 else:
                     self.show_speaker_install_package_message()
-            else:
-                PTLogger.error("Device name not recognised")
-        else:
-            PTLogger.debug("Device state was already set")
+            elif 'pi-topPROTO+' in peripheral.name:
+                # Nothing to do - add to list of peripherals
+                self.add_enabled_peripheral(peripheral)
 
-    def get_connected_devices(self):
+            else:
+                PTLogger.error("Peripheral name not recognised")
+        else:
+            PTLogger.debug("Peripheral state was already set")
+
+    def get_connected_peripherals(self):
         addresses = I2C.get_connected_device_addresses()
 
-        detected_devices = []
+        detected_peripherals = []
 
         for address in addresses:
-            current_device = self.get_device_by_address(address)
-            if current_device is not None:
-                detected_devices.append(current_device)
+            current_peripheral = Peripheral(addr=int(address, 16))
+            if current_peripheral.id != PeripheralID.unknown:
+                detected_peripherals.append(current_peripheral)
 
-        return detected_devices
+        return detected_peripherals
 
-    def get_connected_device_names(self):
-        detected_devices = self.get_connected_devices()
+    def get_connected_peripheral_names(self):
+        detected_peripherals = self.get_connected_peripherals()
 
-        detected_device_names = []
+        detected_peripheral_names = []
 
-        for detected_device in detected_devices:
-            detected_device_names.append(detected_device['name'])
+        for detected_peripheral in detected_peripherals:
+            detected_peripheral_names.append(detected_peripheral.name)
 
-        return detected_device_names
+        return detected_peripheral_names
 
     ################################
     # EXPORTED FUNCTIONS           #
     ################################
 
-    def attempt_disable_device_by_name(self, current_device_name):
-        current_device = self.get_device_by_name(current_device_name)
+    def attempt_disable_peripheral_by_name(self, current_peripheral_name):
+        current_peripheral = Peripheral(name=current_peripheral_name)
 
-        if current_device is None:
-            PTLogger.warning("Device " + current_device_name + " not recognised")
+        if current_peripheral.id == PeripheralID.unknown:
+            PTLogger.warning("Peripheral " + current_peripheral_name + " not recognised")
 
-        elif current_device in self._enabled_devices:
-            PTLogger.debug("updating device state")
-            self.update_device_state(current_device, False)
+        elif self.get_peripheral_enabled(current_peripheral):
+            PTLogger.debug("updating peripheral state")
+            self.update_peripheral_state(current_peripheral, False)
 
         else:
-            PTLogger.warning("Device " + current_device_name + " already disabled")
+            PTLogger.warning("Peripheral " + current_peripheral_name + " already disabled")
 
-    def attempt_enable_device_by_name(self, current_device_name):
-        current_device = self.get_device_by_name(current_device_name)
+    def attempt_enable_peripheral_by_name(self, current_peripheral_name):
+        current_peripheral = Peripheral(name=current_peripheral_name)
 
-        if current_device is None:
-            PTLogger.error("Attempted to enable device " + current_device_name + ", but it was not recognised")
+        if current_peripheral.id == PeripheralID.unknown:
+            PTLogger.error("Attempted to enable peripheral " + current_peripheral_name + ", but it was not recognised")
 
-        elif current_device not in self._enabled_devices:
+        elif not self.get_peripheral_enabled(current_peripheral):
+            PTLogger.debug("Peripheral " + current_peripheral_name + " not already enabled")
 
-            for enabled_device in self._enabled_devices:
-
-                if current_device['id'] not in enabled_device['compatible_ids']:
+            for enabled_peripheral in self._enabled_peripherals:
+                if enabled_peripheral.id != current_peripheral.id and current_peripheral.id not in enabled_peripheral.compatible_ids:
+                    PTLogger.debug("Not compatible with " + enabled_peripheral.name)
                     return
 
-            self.update_device_state(current_device, True)
+            self.update_peripheral_state(current_peripheral, True)
 
         else:
-            PTLogger.debug("Device " + current_device_name + " already enabled")
+            PTLogger.debug("Peripheral " + current_peripheral_name + " already enabled")
 
     def auto_initialise_peripherals(self):
         addresses = I2C.get_connected_device_addresses()
 
-        for device in self._enabled_devices:
-
-            if format(device['addr'], 'x') not in addresses:
-                PTLogger.debug("Device " + device['name'] + " was enabled but not detected.")
-                self.remove_enabled_device(device)
-                self.attempt_disable_device_by_name(device['name'])
+        for peripheral in self._enabled_peripherals:
+            if format(peripheral.addr, 'x') not in addresses:
+                PTLogger.debug("Peripheral " + peripheral.name + " was enabled but not detected.")
+                self.remove_enabled_peripheral(peripheral)
+                self.attempt_disable_peripheral_by_name(peripheral.name)
 
         for address in addresses:
-            current_device = self.get_device_by_address(address)
+            current_peripheral = Peripheral(addr=int(address, 16))
 
-            if current_device is not None:
-                self.attempt_enable_device_by_name(current_device['name'])
+            if current_peripheral.id != PeripheralID.unknown:
+                self.attempt_enable_peripheral_by_name(current_peripheral.name)
 
     def configure_hifiberry_alsactl(self):
         if I2S.get_current_state() is True and path.isfile(self._i2s_configured_file_path) is False:
@@ -377,10 +349,16 @@ class PeripheralManager():
             touch_file(self._i2s_configured_file_path)
             reboot_system()
 
-    def get_peripheral_enabled(self, peripheral_id):
-        device = self.get_device_by_id(peripheral_id)
-        if (device is not None):
-            if (device in self._enabled_devices):
+    def get_peripheral_enabled(self, peripheral):
+        self.get_peripheral_id_enabled(peripheral.id)
+
+
+    def get_peripheral_id_enabled(self, peripheral_id):
+        if peripheral_id == -1:
+            return False
+
+        for enabled_peripheral in self._enabled_peripherals:
+            if peripheral_id == enabled_peripheral.id:
                 return True
 
         return False
