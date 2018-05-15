@@ -116,11 +116,11 @@ class HubManager():
         else:
             PTLogger.warning("Attempted to call get_brightness when there was no active hub")
 
-    def get_screen_off_state(self):
+    def get_screen_blanked_state(self):
         if (self._hub_connected()):
-            return self._active_hub_module.get_screen_off_state()
+            return self._active_hub_module.get_screen_blanked_state()
         else:
-            PTLogger.warning("Attempted to call get_screen_off_state when there was no active hub")
+            PTLogger.warning("Attempted to call get_screen_blanked_state() when there was no active hub")
 
     def get_shutdown_state(self):
         if (self._hub_connected()):

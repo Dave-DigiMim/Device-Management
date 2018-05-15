@@ -115,6 +115,18 @@ class Controller():
     def _on_request_unblank_screen(self):
         self._hub_manager.unblank_screen()
 
+    def _on_request_get_screen_backlight_state(self):
+        if self._hub_manager.get_screen_blanked_state():
+            return 0
+        else:
+            return 1
+
+    def _on_request_set_screen_backlight_state(self, backlight_on):
+        if backlight_on:
+            self._hub_manager.unblank_screen()
+        else:
+            self._hub_manager.blank_screen()
+
     def _on_request_battery_state(self):
         return self._hub_manager.get_battery_state()
 

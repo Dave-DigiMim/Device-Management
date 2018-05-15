@@ -132,9 +132,14 @@ def test_device_id():
 
 def test_screen_blank_unblank():
     print("*** Test screen blanking ***")
+    test_request("Blank Screen", Message.REQ_SET_SCREEN_BACKLIGHT_STATE, ["0"], Message.RSP_SET_SCREEN_BACKLIGHT_STATE, [])
+    sleep(1)
+    test_request("Unblank Screen", Message.REQ_SET_SCREEN_BACKLIGHT_STATE, ["1"], Message.RSP_SET_SCREEN_BACKLIGHT_STATE, [])
+    sleep(1)
     test_request("Blank Screen", Message.REQ_BLANK_SCREEN, [], Message.RSP_BLANK_SCREEN, [])
     sleep(1)
     test_request("Unblank Screen", Message.REQ_UNBLANK_SCREEN, [], Message.RSP_UNBLANK_SCREEN, [])
+    sleep(1)
 
 print("Starting thread...")
 

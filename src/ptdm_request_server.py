@@ -145,6 +145,22 @@ class RequestServer():
 
                 response = Message.from_parts(Message.RSP_UNBLANK_SCREEN, [])
 
+            elif (message.message_id() == Message.REQ_GET_SCREEN_BACKLIGHT_STATE):
+
+                message.validate_parameters([])
+
+                backlight_state = self._callback_client._on_request_get_screen_backlight_state()
+
+                response = Message.from_parts(Message.RSP_GET_SCREEN_BACKLIGHT_STATE, [backlight_state])
+
+            elif (message.message_id() == Message.REQ_SET_SCREEN_BACKLIGHT_STATE):
+
+                message.validate_parameters([int])
+
+                self._callback_client._on_request_set_screen_backlight_state(int(message.parameters()[0]))
+
+                response = Message.from_parts(Message.RSP_SET_SCREEN_BACKLIGHT_STATE, [])
+
             elif (message.message_id() == Message.REQ_GET_BATTERY_STATE):
 
                 message.validate_parameters([])
