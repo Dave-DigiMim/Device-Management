@@ -55,7 +55,7 @@ class Peripheral():
             self.config_speaker_r()
         elif name == "pi-topSPEAKER-v2" or id == PeripheralID.pi_top_speaker_v2 or addr == 0x43:
             self.config_speaker_v2()
-        elif name == "pi-topPROTO" or id == PeripheralID.pi_top_proto_plus or addr == 0x2a:
+        elif name == "pi-topPROTO+" or id == PeripheralID.pi_top_proto_plus or addr == 0x2a:
             self.config_proto_plus()
 
     def config_pulse(self):
@@ -96,6 +96,6 @@ class Peripheral():
     def config_proto_plus(self):
         self.id = PeripheralID.pi_top_proto_plus
         self.compatible_ids = []
-        self.name = "pi-topPROTO"
+        self.name = "pi-topPROTO+"
         self.type = PeripheralType.addon
         self.addr = 0x2a
