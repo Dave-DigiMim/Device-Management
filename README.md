@@ -40,7 +40,9 @@ User input for dimming the screen backlight when the user has been inactive for 
 
     /usr/bin/xhost local:root
 
-To have this run on every boot, find this line in  `/etc/lightdm/lightdm.conf`:
+To set this up yourself, run [xhost-setup](config/xhost-setup).
+
+If you would like to do this manually, you will need to have this run on every boot. Find this line in  `/etc/lightdm/lightdm.conf`:
 
     #display-setup-script=
 
