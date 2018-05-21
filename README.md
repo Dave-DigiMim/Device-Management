@@ -7,8 +7,8 @@ Python-based daemon for detecting, configuring and communicating with pi-top har
 * [Controlling the device manager](#control)
 * [Logging](#logging)
 * [Support](#support)
-    * [Links](#support-links)
-    * [Troubleshooting](#support-troubleshooting)
+        * [Links](#support-links)
+        * [Troubleshooting](#support-troubleshooting)
 
 ## <a name="repo-contents"></a> What is in this repository?
 
@@ -34,18 +34,34 @@ The responsibilities of the device manager include:
 * Monitoring user input in order to dim the screen backlight when the user has been inactive for a configurable period.
 * Shutting down the OS when required.
 
+#### Extra required configuration
+User input for dimming the screen backlight when the user has been inactive for a configurable period is monitored using `xprintidle`.
+`xprintidle` requires extra configuration to work with the root user with admin privileges. This is needed in this case because the device manager needs to run as the root user:
+
+    /usr/bin/xhost local:root
+
+To have this run on every boot, find this line in  `/etc/lightdm/lightdm.conf`:
+
+    #display-setup-script=
+
+and modify as follows:
+
+    display-setup-script=/usr/bin/xhost local:root
+
+NOTE: `pt-device-manager` does this automatically for you during the installation process.
+
 #### Supported device drivers and repositories
 
 * **pi-topHUB v1**
-    * For the original pi-top and pi-topCEED
-    * https://github.com/pi-top/pi-topHUB-v1
+        * For the original pi-top and pi-topCEED
+        * https://github.com/pi-top/pi-topHUB-v1
 * **pi-topHUB v2**
-    * For the new pi-top
-    * https://github.com/pi-top/pi-topHUB-v2
+        * For the new pi-top
+        * https://github.com/pi-top/pi-topHUB-v2
 * **pi-topPULSE**
-    * https://github.com/pi-top/pi-topPULSE
+        * https://github.com/pi-top/pi-topPULSE
 * **pi-topSPEAKER**
-    * https://github.com/pi-top/pi-topSPEAKER
+        * https://github.com/pi-top/pi-topSPEAKER
 
 ### Contents
 
@@ -102,11 +118,11 @@ Checking the current status of the device manager (with example output):
 sudo systemctl status pt-device-manager
 
 <span style="color:#E0E0E0"><span style="color:#859900">●</span> pt-device-manager.service - pi-top device auto-detection and configuration daemon
-   Loaded: loaded (/lib/systemd/system/pt-device-manager.service; enabled)
-   Active: <span style="color:#859900">active (running)</span> since Tue 2017-10-17 15:55:43 UTC; 1s ago
+     Loaded: loaded (/lib/systemd/system/pt-device-manager.service; enabled)
+     Active: <span style="color:#859900">active (running)</span> since Tue 2017-10-17 15:55:43 UTC; 1s ago
  Main PID: 15974 (pt-device-manag)
-   CGroup: /system.slice/pt-device-manager.service
-           └─15974 /usr/bin/python3 /usr/lib/pt-device-manager/pt-device-manager</span>
+     CGroup: /system.slice/pt-device-manager.service
+                     └─15974 /usr/bin/python3 /usr/lib/pt-device-manager/pt-device-manager</span>
 </pre>
 
 Starting/stopping the device manager:
