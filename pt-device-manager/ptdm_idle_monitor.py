@@ -1,11 +1,12 @@
 from ptcommon.logger import PTLogger
-from idletime import get_idle_time
+from subprocess import check_output
+from subprocess import CalledProcessError
+from os import devnull
 from os import makedirs
 from os import path
 from os import remove
 from threading import Thread
 from time import sleep
-
 
 class IdleMonitor():
 
@@ -87,28 +88,46 @@ class IdleMonitor():
 
     def _main_thread_loop(self):
         while self._run_main_thread:
-            time_since_idle = get_idle_time()
+            FNULL = open(devnull, 'w')
 
-            if (time_since_idle != -1):
+            PTLogger.debug("Running xprintidle...")
 
-                if (self._idle_timeout_s > 0):
+            try:
+                xprintidle_resp = check_output(['xprintidle'], stderr=FNULL)
+            except CalledProcessError as exc:
+                PTLogger.warning("Unable to call xprintidle - have non-network local connections been added to X server access control list?")
+                break
 
-                    timeout_expired = (time_since_idle > (self._idle_timeout_s * 1000))
-                    idletime_reset = (time_since_idle < self.previous_idletime)
+            PTLogger.debug("Got xprintidle response...")
+            xprintidle_resp_str = xprintidle_resp.decode("utf-8")
 
-                    timeout_already_expired = (self.previous_idletime > (self._idle_timeout_s * 1000))
 
-                    if timeout_expired and not timeout_already_expired:
-                        self._emit_idletime_threshold_exceeded()
-                        self._cycle_sleep_time = self.SENSITIVE_CYCLE_SLEEP_TIME
-                    elif idletime_reset and timeout_already_expired:
-                        self._emit_exceeded_idletime_reset()
-                        self._cycle_sleep_time = self.DEFAULT_CYCLE_SLEEP_TIME
+            try:
+                idletime_ms = int(xprintidle_resp_str)
+            except:
+                PTLogger.warning("Unable to convert xprintidle response to integer")
+                break
 
-                    self.previous_idletime = time_since_idle
+            PTLogger.debug("Parsed xprintidle response to integer")
+            PTLogger.info("MS since idle: " + str(idletime_ms))
 
-            else:
-                PTLogger.warning("pt-idletime.get_idle_time() returned -1. Check the configuration of xhost.")
+            if (self._idle_timeout_s > 0):
+                timeout_expired = (idletime_ms > (self._idle_timeout_s * 1000))
+                idletime_reset = (idletime_ms < self.previous_idletime)
+
+                PTLogger.debug("Timeout Expired?: " + str(timeout_expired))
+                PTLogger.debug("Idletime Reset?: " + str(idletime_reset))
+
+                timeout_already_expired = (self.previous_idletime > (self._idle_timeout_s * 1000))
+
+                if timeout_expired and not timeout_already_expired:
+                    self._emit_idletime_threshold_exceeded()
+                    self._cycle_sleep_time = self.SENSITIVE_CYCLE_SLEEP_TIME
+                elif idletime_reset and timeout_already_expired:
+                    self._emit_exceeded_idletime_reset()
+                    self._cycle_sleep_time = self.DEFAULT_CYCLE_SLEEP_TIME
+
+                self.previous_idletime = idletime_ms
 
             for i in range(5):
                 sleep(self._cycle_sleep_time / 5)

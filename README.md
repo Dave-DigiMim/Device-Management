@@ -7,8 +7,8 @@ Python-based daemon for detecting, configuring and communicating with pi-top har
 * [Controlling the device manager](#control)
 * [Logging](#logging)
 * [Support](#support)
-    * [Links](#support-links)
-    * [Troubleshooting](#support-troubleshooting)
+        * [Links](#support-links)
+        * [Troubleshooting](#support-troubleshooting)
 
 ## <a name="repo-contents"></a> What is in this repository?
 
@@ -34,18 +34,44 @@ The responsibilities of the device manager include:
 * Monitoring user input in order to dim the screen backlight when the user has been inactive for a configurable period.
 * Shutting down the OS when required.
 
+#### Extra required configuration
+##### Dependencies
+* python3-pt-common
+  * Common class of Python operations (see this repo)
+* python3-systemd
+  * Used to write to the journal
+* libzmq3-dev, python3-zmq
+  * Used to broadcast messages to OS about device changes
+* wiringpi
+  * Used by poweroff-v1
+* xprintidle
+  * Used for user idle time. Requires additional configuration (see below).
+
+##### User Input
+User input for dimming the screen backlight when the user has been inactive for a configurable period is monitored using `xprintidle`.
+`xprintidle` requires extra configuration to work with the root user with admin privileges. This is needed in this case because the device manager needs to run as the root user:
+
+    /usr/bin/xhost local:root
+
+To set this up yourself, run [xhost-setup](config/xhost-setup).
+
+If you would like to do this manually, you will need to have this run on every boot. Find this line in  `/etc/lightdm/lightdm.conf`:
+
+    #display-setup-script=
+
+and modify as follows:
+
+    display-setup-script=/usr/bin/xhost local:root
+
+NOTE: `pt-device-manager` does this automatically for you during the installation process.
+
 #### Supported device drivers and repositories
 
-* **pi-topHUB v1**
-    * For the original pi-top and pi-topCEED
-    * https://github.com/pi-top/pi-topHUB-v1
-* **pi-topHUB v2**
-    * For the new pi-top
-    * https://github.com/pi-top/pi-topHUB-v2
-* **pi-topPULSE**
-    * https://github.com/pi-top/pi-topPULSE
-* **pi-topSPEAKER**
-    * https://github.com/pi-top/pi-topSPEAKER
+* **[pi-topHUB v1](https://github.com/pi-top/pi-topHUB-v1)** - For the original pi-top and pi-topCEED
+* **[pi-topHUB v2](https://github.com/pi-top/pi-topHUB-v2)** - For the new pi-top
+* **[pi-topPULSE](https://github.com/pi-top/pi-topPULSE)**
+* **[pi-topSPEAKER](https://github.com/pi-top/pi-topSPEAKER)**
+* **[pi-topPROTO+](https://github.com/pi-top/pi-topPROTO-plus)**
 
 ### Contents
 
@@ -69,7 +95,7 @@ These Python modules are used by pt-device-manager.
 These Python scripts are pt-device-manager messaging clients. They send messages to the device management service to adjust the screen settings or query the battery status on a pi-top device.
 
 ##### pt-i2s
-Used by pt-device-manager to switch I2S on/off, specifically when targeting pi-topSPEAKER/pi-topPULSE. To configure for I2S, a custom `asound.conf` file is used to enable mixing multiple audio sources. As well as this, some settings in `/boot/config.txt` are altered:
+Used by pt-device-manager to switch I2S on/off on the Raspberry Pi, specifically when targeting pi-topSPEAKER/pi-topPULSE. This is **only** used in conjunction with pi-topHUB v1, as I2S is handled automatically on pi-topHUB v2. To configure for I2S, a custom `asound.conf` file is used to enable mixing multiple audio sources. As well as this, some settings in `/boot/config.txt` are altered:
 
 * `dtoverlay=hifiberry-dac` - enables I2S audio on subsequent boots
 * `#dtparam=audio=on` - disables default sound driver
@@ -79,11 +105,11 @@ Disabling I2S reverses these changes.
 
 #### Directory: `assets`
 ##### hifiberry-alsactl.restore
-Found in `i2s` subdirectory. This file exposes a soundcard device configuration to the operating system, enabling volume control. It is used by `pt-device-manager` when it detects that I2S has been enabled via the daemon for the first time, whereby it reboots to enable. This operation is only required once, so a 'breadcrumb' file is created to indicate that this has been completed.
+Found in `assets` subdirectory. This file exposes a soundcard device configuration to the operating system, enabling volume control. It is used by `pt-device-manager` when it detects that I2S has been enabled via the daemon for the first time, whereby it reboots to enable. This operation is only required once, so a 'breadcrumb' file is created to indicate that this has been completed. This is **only** used in conjunction with pi-topHUB v1, as I2S is handled automatically on pi-topHUB v2.
 
 #### Directory: `poweroff`
 ##### poweroff-v1(.c), poweroff-v2
-These programs (written in C and Python respectively) are used to send a message directly to the relevant pi-top hub to trigger a full system hardware shutdown.
+These programs (written in C and Python respectively) are used to send a message directly to the relevant pi-topHUB to trigger a full system hardware shutdown.
 
 #### Directory: `tests`
 ##### pt-device-manager-req-test
@@ -102,11 +128,11 @@ Checking the current status of the device manager (with example output):
 sudo systemctl status pt-device-manager
 
 <span style="color:#E0E0E0"><span style="color:#859900">●</span> pt-device-manager.service - pi-top device auto-detection and configuration daemon
-   Loaded: loaded (/lib/systemd/system/pt-device-manager.service; enabled)
-   Active: <span style="color:#859900">active (running)</span> since Tue 2017-10-17 15:55:43 UTC; 1s ago
+     Loaded: loaded (/lib/systemd/system/pt-device-manager.service; enabled)
+     Active: <span style="color:#859900">active (running)</span> since Tue 2017-10-17 15:55:43 UTC; 1s ago
  Main PID: 15974 (pt-device-manag)
-   CGroup: /system.slice/pt-device-manager.service
-           └─15974 /usr/bin/python3 /usr/lib/pt-device-manager/pt-device-manager</span>
+     CGroup: /system.slice/pt-device-manager.service
+                     └─15974 /usr/bin/python3 /usr/lib/pt-device-manager/pt-device-manager</span>
 </pre>
 
 Starting/stopping the device manager:
@@ -147,6 +173,7 @@ sudo journalctl -u pt-device-manager -b
 * [pi-topHUB v2](https://github.com/pi-top/pi-topHUB-v2)
 * [pi-topPULSE](https://github.com/pi-top/pi-topPULSE)
 * [pi-topSPEAKER](https://github.com/pi-top/pi-topSPEAKER)
+* [pi-topPROTO+](https://github.com/pi-top/pi-topPROTO-plus)
 * <a name="support-pinout"></a>[pi-top Peripherals' GPIO Pinouts](https://pinout.xyz/boards#manufacturer=pi-top)
 * [Support](https://support.pi-top.com/)
 
