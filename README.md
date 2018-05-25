@@ -35,17 +35,36 @@ The responsibilities of the device manager include:
 * Shutting down the OS when required.
 
 #### Extra required configuration
-##### Dependencies
+##### Dependencies - pt-device-manager
 * python3-pt-common
   * Common class of Python operations (see this repo)
+* python3-pip
+  * Used to install `pyserial` (see [config](config) directory), which is not available to install using `apt-get`.
 * python3-systemd
   * Used to write to the journal
 * libzmq3-dev, python3-zmq
   * Used to broadcast messages to OS about device changes
 * wiringpi
   * Used by poweroff-v1
-* xprintidle
-  * Used for user idle time. Requires additional configuration (see below).
+* xprintidle, x11-xserver-utils, lightdm
+  * Used for user idle time. Requires additional configuration (see below)
+
+##### Recommends - pt-device-manager
+* pt-desktop
+  * Used, if available, for providing GUI-based instructions/information to the user, particularly to notify if a system reconfiguration is required
+
+* python3-pt-pulse, python3-pt-speaker, python3-pt-hub-v1, python3-pt-hub-v2, python3-pt-proto-plus
+  * Modules that the device manager will use if the device is detected to ensure that it is configured correctly
+
+##### Dependencies - python3-pt-common
+* raspi-config
+  * Used to determine if I2C is enabled, so that devices and peripherals can be detected
+* python3-systemd
+  * Used to write to the syslog as a system process
+* i2c-tools
+  * Used to handle I2C interaction
+* alsa-utils
+  * Used to configure sound settings
 
 ##### User Input
 User input for dimming the screen backlight when the user has been inactive for a configurable period is monitored using `xprintidle`.
@@ -131,6 +150,7 @@ These programs (written in C and Python respectively) are used to send a message
 ##### poweroff-v{1,2}.service
 These are systemd services for the poweroff programs, which ensure that they are always run when the OS is shutting down.
 These are typically put in `/lib/system/systemd/`, and enabled by running `sudo systemctl enable poweroff-v1.service` and `sudo systemctl enable poweroff-v1.service` in the terminal.
+These services require the `poweroff-v1` and `poweroff-v2` files to be executable and put in `/usr/lib/pt-device-manager`, although this can be easily changed as desired.
 
 #### Directory: `tests`
 ##### pt-device-manager-req-test
