@@ -8,17 +8,21 @@ class DeviceID():
 class HostDevice():
     id = DeviceID.unknown
     name = ""
+    addr = -1
 
-    def __init__(self, id=-1):
-        if id == DeviceID.pi_top:
-            self.id = id
+    def __init__(self, name="", id=-1, addr=-1):
+        if name == "pi-top v1" or id == DeviceID.pi_top or addr == 0x0b:
+            self.id = DeviceID.pi_top
             self.name = "pi-top v1"
-        if id == DeviceID.pi_top_ceed:
-            self.id = id
+            self.addr = 0x0b
+        if (name == "pi-topCEED" or id == DeviceID.pi_top) and addr == -1:
+            self.id = DeviceID.pi_top_ceed
             self.name = "pi-topCEED"
-        if id == DeviceID.pi_top_v2:
-            self.id = id
+            self.addr = -1
+        if name == "pi-top v2" or id == DeviceID.pi_top_v2 or addr == 0x10:
+            self.id = DeviceID.pi_top_v2
             self.name = "pi-top v2"
+            self.addr = 0x10
 
 
 class PeripheralID():
