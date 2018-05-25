@@ -73,6 +73,24 @@ NOTE: `pt-device-manager` does this automatically for you during the installatio
 * **[pi-topSPEAKER](https://github.com/pi-top/pi-topSPEAKER)**
 * **[pi-topPROTO+](https://github.com/pi-top/pi-topPROTO-plus)**
 
+The following is a summary of relevant device details:
+
+| Device                     | I2C Address | SPI Bus
+| -------------------------- |:-----------:|:-----------:|
+| pi-topHUB v1 (pi-top)      |     0x0b    |      1      |
+| pi-topHUB v1 (pi-topCEED)  |      -      |      1      |
+| pi-topHUB v2               |     0x10    |      -      |
+
+| Peripheral               | I2C Address |
+| ------------------------ |:-----------:|
+| pi-topPROTO+             |     0x2a    |
+| pi-topPULSE              |     0x24    |
+| pi-topSPEAKER v1 (Left)  |     0x71    |
+| pi-topSPEAKER v1 (Right) |     0x72    |
+| pi-topSPEAKER v1 (Mono)  |     0x73    |
+| pi-topSPEAKER v2         |     0x43    |
+
+
 ### Contents
 
 #### Directory: `pt-device-manager`
@@ -110,6 +128,9 @@ Found in `assets` subdirectory. This file exposes a soundcard device configurati
 #### Directory: `poweroff`
 ##### poweroff-v1(.c), poweroff-v2
 These programs (written in C and Python respectively) are used to send a message directly to the relevant pi-topHUB to trigger a full system hardware shutdown.
+##### poweroff-v{1,2}.service
+These are systemd services for the poweroff programs, which ensure that they are always run when the OS is shutting down.
+These are typically put in `/lib/system/systemd/`, and enabled by running `sudo systemctl enable poweroff-v1.service` and `sudo systemctl enable poweroff-v1.service` in the terminal.
 
 #### Directory: `tests`
 ##### pt-device-manager-req-test
@@ -178,6 +199,10 @@ sudo journalctl -u pt-device-manager -b
 * [Support](https://support.pi-top.com/)
 
 ### <a name="support-troubleshooting"></a> Troubleshooting
-#### Why is my pi-top addon not working?
+#### Why is my pi-top device/peripheral not working?
 
 * Please see the corresponding repository for your device. Repositories are listed at the top of this README.
+
+#### Why is my pi-top v1 reporting itself to be a pi-topCEED?
+
+* See the [pi-topHUB v1 troubleshooting section](https://github.com/pi-top/pi-topHUB-v1#support-troubleshooting) for information relating to this issue.
