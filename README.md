@@ -7,22 +7,33 @@ Python-based daemon for detecting, configuring and communicating with pi-top har
 * [Controlling the device manager](#control)
 * [Logging](#logging)
 * [Support](#support)
-        * [Links](#support-links)
-        * [Troubleshooting](#support-troubleshooting)
+  * [Links](#support-links)
+  * [Troubleshooting](#support-troubleshooting)
 
 ## <a name="repo-contents"></a> What is in this repository?
 
-### Summary
-This repository forms the basis of the `pt-device-manager` software package, available for install on both pi-topOS and Raspbian. On the latest versions of pi-topOS, this package is pre-installed. On other platforms such as Raspbian, it is not recommended to install this package directly. Instead, follow the install instructions for any of the repositories for devices that this repository targets. For example, to install support for a pi-topPULSE on a pi-topCEED:
+### How do I install pi-top hardware support?
+The code in this repository forms the basis of the `pt-device-manager` software package, available for install on both pi-topOS and Raspbian. On the latest versions of pi-topOS, this package is pre-installed. On other platforms such as Raspbian, it is **NOT** recommended to install this package directly.
+
+![Dependency tree for pi-top device software](
+https://static.pi-top.com/images/pt-devices-debtree.png "Dependency tree for pi-top device software")
+
+As demonstrated in the software tree above, `pt-devices` installs all of the relevant software for full pi-top device support, and is therefore the best solution for ensuring full pi-top hardware support:
 
 <pre style="background-color: #002b36; color: #FFFFFF;">
-sudo apt install pt-hub
-sudo apt install pt-pulse
+sudo apt install pt-devices
 </pre>
 
-As both the packages `pt-hub` and `pt-pulse` have dependencies on the pt-device-manager, the `pt-device-manager` package will also be installed and enabled.
+However, this design also allows for specific hardware requirements to only install what is needed. For example, to add pi-topHUB and pi-topSPEAKER support:
 
-pt-device-manager is a Python3 program that when installed and run on a pi-top device enables detection, configuration and management of pi-top hardware. This includes hubs (e.g. pi-top or pi-topCEED) as well as peripherals (pi-topPULSE, pi-topSPEAKER). The actual work of communicating with each hardware device is handled by software equivalent to 'device drivers' in separate repositories. However the pt-device-manager takes care of loading and initialising these drivers in a pattern akin to a _plugin_ architecture.
+<pre style="background-color: #002b36; color: #FFFFFF;">
+sudo apt install pt-hub pt-speaker
+</pre>
+
+As both the packages `pt-hub` and `pt-pulse` have dependencies on the pt-device-manager, the `pt-device-manager` package will also be installed and enabled. It is not recommended to install any of the Python 3 libraries directly if you require plug-and-play functionality.
+
+### Summary
+`pt-device-manager` is a Python 3 program that when installed and run on a pi-top device enables detection, configuration and management of pi-top hardware. This includes hubs (e.g. pi-top or pi-topCEED) as well as peripherals (pi-topPULSE, pi-topSPEAKER). The actual work of communicating with each hardware device is handled by software equivalent to 'device drivers' in separate repositories. However the pt-device-manager takes care of loading and initialising these drivers in a pattern akin to a _plugin_ architecture.
 
 The responsibilities of the device manager include:
 
