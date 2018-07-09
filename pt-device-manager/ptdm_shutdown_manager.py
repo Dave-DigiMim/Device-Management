@@ -96,21 +96,24 @@ class ShutdownManager:
         if under_shutdown_threshold:
             self.shutdown_battery_ctr.increment()
             if (self.shutdown_initiated is False):
-                PTLogger.info("Battery: shutdown threshold reached " + str(self.shutdown_battery_ctr._current) + " of " + str(self.shutdown_battery_ctr._max))
+                PTLogger.info("Battery: shutdown threshold reached " + str(self.shutdown_battery_ctr._current) + " of " + str(self.shutdown_battery_ctr._max) 
+                + " (charging state: " + str(self._battery_charging) + ", capacity: " + str(self._battery_capacity) + ")")
         else:
             self.shutdown_battery_ctr.reset()
 
         if under_critical_threshold:
             self.critical_battery_ctr.increment()
             if (self.shown_critical_battery_message is False):
-                PTLogger.info("Battery: critical threshold reached " + str(self.critical_battery_ctr._current) + " of " + str(self.critical_battery_ctr._max))
+                PTLogger.info("Battery: critical threshold reached " + str(self.critical_battery_ctr._current) + " of " + str(self.critical_battery_ctr._max)
+                + " (charging state: " + str(self._battery_charging) + ", capacity: " + str(self._battery_capacity) + ")")
         else:
             self.critical_battery_ctr.reset()
 
         if under_warning_threshold:
             self.warning_battery_ctr.increment()
             if (self.shown_warning_battery_message is False):
-                PTLogger.info("Battery: warning threshold reached " + str(self.warning_battery_ctr._current) + " of " + str(self.warning_battery_ctr._max))
+                PTLogger.info("Battery: warning threshold reached " + str(self.warning_battery_ctr._current) + " of " + str(self.warning_battery_ctr._max)
+                + " (charging state: " + str(self._battery_charging) + ", capacity: " + str(self._battery_capacity) + ")")
         else:
             self.warning_battery_ctr.reset()
 
