@@ -71,7 +71,10 @@ def get_debian_version():
                 version = quote_wrapped_version.replace("\"", "").replace("\n", "")
                 break
 
-    return version
+    try:
+        return int(version)
+    except:
+        return None
 
 
 def reboot_system():
