@@ -115,36 +115,42 @@ class HubManager():
             return self._active_hub_module.get_brightness()
         else:
             PTLogger.warning("Attempted to call get_brightness when there was no active hub")
+            return None
 
     def get_screen_blanked_state(self):
         if (self._hub_connected()):
             return self._active_hub_module.get_screen_blanked_state()
         else:
             PTLogger.warning("Attempted to call get_screen_blanked_state() when there was no active hub")
+            return None
 
     def get_shutdown_state(self):
         if (self._hub_connected()):
             return self._active_hub_module.get_shutdown_state()
         else:
             PTLogger.warning("Attempted to call get_shutdown_state when there was no active hub")
+            return None
 
     def get_battery_charging_state(self):
         if (self._hub_connected()):
             return self._active_hub_module.get_battery_charging_state()
         else:
             PTLogger.warning("Attempted to call get_battery_charging_state when there was no active hub")
+            return None
 
     def get_battery_time_state(self):
         if (self._hub_connected()):
             return self._active_hub_module.get_battery_time_state()
         else:
             PTLogger.warning("Attempted to call get_battery_time_state when there was no active hub")
+            return None
 
     def get_battery_state(self):
         if (self._hub_connected()):
             return self._active_hub_module.get_battery_state()
         else:
             PTLogger.warning("Attempted to call get_battery_state when there was no active hub")
+            return None
 
     def set_brightness(self, brightness):
         PTLogger.info("Setting brightness to " + str(brightness))

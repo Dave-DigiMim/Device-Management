@@ -68,7 +68,11 @@ def get_debian_version():
         for line in searchfile:
             if "VERSION_ID=" in line:
                 quote_wrapped_version = line.split("=")[1]
-                version = quote_wrapped_version.replace("\"", "").replace("\n", "")
+                version_str = quote_wrapped_version.replace("\"", "").replace("\n", "")
+                try:
+                    version = int(version_str)
+                except ValueError as ex:
+                    version = None
                 break
 
     try:

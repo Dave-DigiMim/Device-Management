@@ -350,7 +350,7 @@ class PeripheralManager():
             reboot_system()
 
     def get_peripheral_enabled(self, peripheral):
-        self.get_peripheral_id_enabled(peripheral.id)
+        return self.get_peripheral_id_enabled(peripheral.id)
 
 
     def get_peripheral_id_enabled(self, peripheral_id):

@@ -94,6 +94,8 @@ class RequestServer():
                 message.validate_parameters([])
 
                 device_id = self._callback_client._on_request_get_device_id()
+                if device_id is None:
+                    device_id = -1
 
                 response = Message.from_parts(Message.RSP_GET_DEVICE_ID, [device_id])
 
@@ -102,6 +104,8 @@ class RequestServer():
                 message.validate_parameters([])
 
                 brightness = self._callback_client._on_request_get_brightness()
+                if brightness is None:
+                    brightness = -1
 
                 response = Message.from_parts(Message.RSP_GET_BRIGHTNESS, [brightness])
 
@@ -150,6 +154,8 @@ class RequestServer():
                 message.validate_parameters([])
 
                 backlight_state = self._callback_client._on_request_get_screen_backlight_state()
+                if backlight_state is None:
+                    backlight_state = -1
 
                 response = Message.from_parts(Message.RSP_GET_SCREEN_BACKLIGHT_STATE, [backlight_state])
 
@@ -184,6 +190,8 @@ class RequestServer():
                 message.validate_parameters([])
 
                 timeout = self._callback_client._on_request_get_screen_blanking_timeout()
+                if timeout is None:
+                    timeout = -1
 
                 response = Message.from_parts(Message.RSP_GET_SCREEN_BLANKING_TIMEOUT, [timeout])
 
