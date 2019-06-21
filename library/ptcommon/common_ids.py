@@ -92,14 +92,14 @@ class Peripheral():
 
     def config_speaker_v2(self):
         self.id = PeripheralID.pi_top_speaker_v2
-        self.compatible_ids = []
+        self.compatible_ids = [5]
         self.name = "pi-topSPEAKER-v2"
         self.type = PeripheralType.addon
         self.addr = 0x43
 
     def config_proto_plus(self):
         self.id = PeripheralID.pi_top_proto_plus
-        self.compatible_ids = []
+        self.compatible_ids = [0, 4]
         self.name = "pi-topPROTO+"
         self.type = PeripheralType.addon
         self.addr = 0x2a
